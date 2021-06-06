@@ -8,31 +8,63 @@
 
 import UIKit
 
-struct Category {
+struct Heading {
     let title : String?
+    let dateTime : String?
     var isExpand : Bool?
-    let subCategory: [SubCategory]?
+    var isDropDownShow : Bool?
+    let subCategory: [SubHeading]?
 }
 
-struct SubCategory {
-    let title : String?
- }
-
-class cell1 : UITableViewCell{
-    @IBOutlet weak var cL1: UILabel!
+struct SubHeading {
+    let title1 : String?
+    let title2 : String?
+    let title3 : String?
 }
-class cell2 : UITableViewCell{
-    @IBOutlet weak var cL2: UILabel!
+
+class HeadingCell : UITableViewCell{
+    
+    @IBOutlet weak var mainView: UIView!
+    @IBOutlet weak var lblHeading: UILabel!
+    @IBOutlet weak var lblTime: UILabel!
+    @IBOutlet weak var imgDropdown: UIImageView!
+}
+extension UIView {
+    func roundCornersWithLayerMask(cornerRadii: CGFloat, corners: UIRectCorner) {
+        let path = UIBezierPath(roundedRect: bounds,
+                                byRoundingCorners: corners,
+                                cornerRadii: CGSize(width: cornerRadii, height: cornerRadii))
+        let maskLayer = CAShapeLayer()
+        maskLayer.path = path.cgPath
+        layer.mask = maskLayer
+    }
+}
+
+class SubHeadingCell : UITableViewCell{
+    @IBOutlet weak var lbl1: UILabel!
+    @IBOutlet weak var lbl2: UILabel!
+    @IBOutlet weak var lbl3: UILabel!
 }
 
 class ViewController: UIViewController {
     @IBOutlet weak var tv: UITableView!
     
-    var data : [Category] = [
-        Category(title: "first", isExpand: false,
-                 subCategory: [SubCategory(title: "cell 1"), SubCategory(title: "cell 2")]),
-        Category(title: "second", isExpand: false,
-                 subCategory: [SubCategory(title: "cell 1"), SubCategory(title: "cell 2") , SubCategory(title: "cell 3")])
+    var data : [Heading] = [
+        Heading(title: "Next Salah Dhuhr", dateTime: "1 hr 27 mins left", isExpand: false, isDropDownShow: true,
+                subCategory: [
+                    SubHeading(title1: "Time",title2: "Adham",title3: "Iqama"),
+                    SubHeading(title1: "Fajr",title2: "4:20 AM",title3: "5:00 AM"),
+                    SubHeading(title1: "Sunrise",title2: "5:52 AM",title3: ""),
+                    SubHeading(title1: "Dhuhr",title2: "1:18 PM",title3: "1:30 PM"),
+                    SubHeading(title1: "Asr",title2: "6:28 PM",title3: "6:40 PM"),
+                    SubHeading(title1: "Maghrib",title2: "8:42 PM",title3: "8:55 PM"),
+                    SubHeading(title1: "Isha",title2: "10:16 PM",title3: "10:30 PM"),
+                ]),
+        Heading(title: "Khateeb Sechedule",dateTime: "Jun 11, 2021", isExpand: true, isDropDownShow: false,
+                subCategory: [
+                    SubHeading(title1: "01:00 PM",title2: "02:00 PM",title3: nil),
+                    SubHeading(title1: "Guest",title2: "Guest",title3: nil),
+                ])
     ]
     
     override func viewDidLoad() {
@@ -45,33 +77,48 @@ extension ViewController : UITableViewDataSource , UITableViewDelegate{
         return data.count
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if data[section].isExpand == true {
-            return data[section].subCategory!.count + 1
-        }else{
-            return 1
-        }
+        return (data[section].isExpand ?? false) ? data[section].subCategory!.count + 1 : 1
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return indexPath.row == 0 ? 60 : UITableView.automaticDimension
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let index = indexPath.row - 1
+        let rowData = data[indexPath.section]
         if indexPath.row == 0 {
-            let cell = tv.dequeueReusableCell(withIdentifier: String.init(describing: cell1.self)) as! cell1
-            cell.cL1.text = data[indexPath.section].title
+            let cell = tv.dequeueReusableCell(withIdentifier: String.init(describing: HeadingCell.self)) as! HeadingCell
+            cell.lblHeading.text = rowData.title
+            cell.lblTime.text = rowData.dateTime
             
+            cell.imgDropdown.image = (rowData.isExpand ?? false) ? UIImage.init(named: "down") :  UIImage.init(named: "up")
+            cell.imgDropdown.isHidden = !(rowData.isDropDownShow ?? false)
             return cell
         }else{
-            let cell = tv.dequeueReusableCell(withIdentifier: String.init(describing: cell2.self)) as! cell2
-            cell.cL2.text = data[indexPath.section].subCategory![index].title
+            let cell = tv.dequeueReusableCell(withIdentifier: String.init(describing: SubHeadingCell.self)) as! SubHeadingCell
+            let font = UIFont.systemFont(ofSize: 17, weight: index == 0 ? .bold : .regular)
+            cell.lbl1.font = font
+            cell.lbl2.font = font
+            cell.lbl3.font = font
+            
+            cell.lbl1.text = rowData.subCategory![index].title1
+            if rowData.subCategory![index].title3 == nil {
+                cell.lbl2.text = nil
+                cell.lbl3.text = rowData.subCategory![index].title2
+            }else{
+                cell.lbl2.text = rowData.subCategory![index].title2
+                cell.lbl3.text = rowData.subCategory![index].title3
+            }
             return cell
         }
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if indexPath.row == 0 {
+        tv.deselectRow(at: indexPath, animated: false)
+        if indexPath.row == 0 && (data[indexPath.section].isDropDownShow ?? false){
             data[indexPath.section].isExpand = !(data[indexPath.section].isExpand ?? false)
             tv.reloadSections(IndexSet.init(integer: indexPath.section), with: .none)
-
         }
-        tv.deselectRow(at: indexPath, animated: false)
     }
 }
