@@ -12,8 +12,10 @@ struct Heading {
     let title : String?
     let dateTime : String?
     var isExpand : Bool?
+    var isSmall : Bool?
     var isDropDownShow : Bool?
     let subCategory: [SubHeading]?
+    let smallCategory: [SubHeading]?
 }
 
 struct SubHeading {
@@ -23,12 +25,12 @@ struct SubHeading {
 }
 
 class HeadingCell : UITableViewCell{
-    
     @IBOutlet weak var mainView: UIView!
     @IBOutlet weak var lblHeading: UILabel!
     @IBOutlet weak var lblTime: UILabel!
     @IBOutlet weak var imgDropdown: UIImageView!
 }
+
 extension UIView {
     func roundCornersWithLayerMask(cornerRadii: CGFloat, corners: UIRectCorner) {
         let path = UIBezierPath(roundedRect: bounds,
@@ -50,7 +52,9 @@ class ViewController: UIViewController {
     @IBOutlet weak var tv: UITableView!
     
     var data : [Heading] = [
-        Heading(title: "Next Salah Dhuhr", dateTime: "1 hr 27 mins left", isExpand: false, isDropDownShow: true,
+        Heading(title: "Next Salah Dhuhr", dateTime: "1 hr 27 mins left", isExpand: false,isSmall: true, isDropDownShow: true,
+                
+                
                 subCategory: [
                     SubHeading(title1: "Time",title2: "Adham",title3: "Iqama"),
                     SubHeading(title1: "Fajr",title2: "4:20 AM",title3: "5:00 AM"),
@@ -59,12 +63,26 @@ class ViewController: UIViewController {
                     SubHeading(title1: "Asr",title2: "6:28 PM",title3: "6:40 PM"),
                     SubHeading(title1: "Maghrib",title2: "8:42 PM",title3: "8:55 PM"),
                     SubHeading(title1: "Isha",title2: "10:16 PM",title3: "10:30 PM"),
-                ]),
-        Heading(title: "Khateeb Sechedule",dateTime: "Jun 11, 2021", isExpand: true, isDropDownShow: false,
+                ],
+              
+                
+                
+                smallCategory: [
+                    SubHeading(title1: "Time",title2: "Adham",title3: "Iqama"),
+                    SubHeading(title1: "Dhuhr",title2: "1:18 PM",title3: "1:30 PM"),
+
+                ]
+                ),
+       
+        
+        
+        
+        Heading(title: "Khateeb Sechedule",dateTime: "Jun 11, 2021", isExpand: true, isSmall: false, isDropDownShow: false,
                 subCategory: [
                     SubHeading(title1: "01:00 PM",title2: "02:00 PM",title3: nil),
                     SubHeading(title1: "Guest",title2: "Guest",title3: nil),
-                ])
+                ],
+                smallCategory: [])
     ]
     
     override func viewDidLoad() {
@@ -77,7 +95,14 @@ extension ViewController : UITableViewDataSource , UITableViewDelegate{
         return data.count
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return (data[section].isExpand ?? false) ? data[section].subCategory!.count + 1 : 1
+        if (data[section].isExpand ?? false){
+            return data[section].subCategory!.count + 1
+        } else if (data[section].isSmall ?? false) && (data[section].isExpand ?? false) == false{
+            return data[section].smallCategory!.count + 1
+        }
+        else {
+            return 1
+        }
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -101,14 +126,19 @@ extension ViewController : UITableViewDataSource , UITableViewDelegate{
             cell.lbl1.font = font
             cell.lbl2.font = font
             cell.lbl3.font = font
-            
-            cell.lbl1.text = rowData.subCategory![index].title1
-            if rowData.subCategory![index].title3 == nil {
+            var subCategory : [SubHeading]?
+            if (rowData.isExpand ?? false){
+                subCategory = rowData.subCategory
+            }else if (rowData.isSmall ?? false) && (rowData.isExpand ?? false) == false{
+                subCategory = rowData.smallCategory
+            }
+            cell.lbl1.text = subCategory![index].title1
+            if subCategory![index].title3 == nil {
                 cell.lbl2.text = nil
-                cell.lbl3.text = rowData.subCategory![index].title2
+                cell.lbl3.text = subCategory![index].title2
             }else{
-                cell.lbl2.text = rowData.subCategory![index].title2
-                cell.lbl3.text = rowData.subCategory![index].title3
+                cell.lbl2.text = subCategory![index].title2
+                cell.lbl3.text = subCategory![index].title3
             }
             return cell
         }
